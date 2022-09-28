@@ -118,7 +118,7 @@ class Filemaker(FilemakerBase):
             fp.write(content)
 
 
-class FilemakerPermissions(FilemakerBase):
+class FilemakerExplicit(FilemakerBase):
     def __init__(self, root, fdef):
         self._curdir = []
         self.keywords = {
@@ -126,7 +126,7 @@ class FilemakerPermissions(FilemakerBase):
             "user": self.make_item_user,
             "group": self.make_item_group,
         }
-        super(FilemakerPermissions, self).__init__(root, fdef)
+        super(FilemakerExplicit, self).__init__(root, fdef)
 
     def make_dict_item(self, dct):
         if 'directory' in dct or 'file' in dct:

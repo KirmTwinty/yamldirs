@@ -7,7 +7,7 @@ import sys
 import argparse
 from ruamel.yaml import YAML
 from ruamel.yaml.scalarstring import LiteralScalarString
-from .filemaker import Filemaker, FilemakerPermissions
+from .filemaker import Filemaker, FilemakerExplicit
 
 
 def tree(dirname, **kw):
@@ -83,7 +83,7 @@ def directory2yaml(dirname, stream=sys.stdout, **args):
 
 def reconstitute_directory(yamlfile, explicit=False):
     if explicit:
-        FilemakerPermissions(os.getcwd(), open(yamlfile).read())
+        FilemakerExplicit(os.getcwd(), open(yamlfile).read())
     else:
         Filemaker(os.getcwd(), open(yamlfile).read())
 
