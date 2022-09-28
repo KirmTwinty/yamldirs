@@ -7,7 +7,7 @@ import sys
 import argparse
 from ruamel.yaml import YAML
 from ruamel.yaml.scalarstring import LiteralScalarString
-from .filemaker import Filemaker
+from .filemaker import Filemaker, FilemakerPermissions
 
 
 def tree(dirname, **kw):
@@ -81,8 +81,11 @@ def directory2yaml(dirname, stream=sys.stdout, **args):
     yaml.dump(res, stream)
 
 
-def reconstitute_directory(yamlfile):
-    Filemaker(os.getcwd(), open(yamlfile).read())
+def reconstitute_directory(yamlfile, explicit=False):
+    if explicit:
+        FilemakerPermissions(os.getcwd(), open(yamlfile).read())
+    else:
+        Filemaker(os.getcwd(), open(yamlfile).read())
 
 
 def main():     # pragma: nocover
@@ -91,6 +94,7 @@ def main():     # pragma: nocover
     p.add_argument('--dot', action='store_true', default=False, help="traverse files/directories starting with .")
     p.add_argument('--exclude', '-x', default=[], nargs="+", metavar="DIRNAME", help="directory to exclude")
     p.add_argument('--dirs-only', action='store_true', default=False, help="only store directories, not files.")
+    p.add_argument('--explicit-version', action='store_true', default=False, help="use the explicit version of yamldirs.")
 
     args = p.parse_args()
     extracting = args.dirname.endswith('.yaml')
@@ -99,6 +103,6 @@ def main():     # pragma: nocover
     if args.dirs_only:
         directories2yaml(**dict(args._get_kwargs()))
     elif extracting:
-        reconstitute_directory(args.dirname)
+        reconstitute_directory(args.dirname, args.explicit_version)
     else:
         directory2yaml(**dict(args._get_kwargs()))
