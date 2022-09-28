@@ -118,6 +118,81 @@ class Filemaker(FilemakerBase):
             fp.write(content)
 
 
+class FilemakerPermissions(FilemakerBase):
+    def __init__(self, root, fdef):
+        self._curdir = []
+        self.keywords = {
+            "mode": self.make_item_mode,
+            "user": self.make_item_user,
+            "group": self.make_item_group,
+        }
+        super(FilemakerPermissions, self).__init__(root, fdef)
+
+    def make_dict_item(self, dct):
+        if 'directory' in dct or 'file' in dct:
+            current = None
+            if 'directory' in dct:
+                current = dct['directory']
+                self.mkdir(dct['directory'])
+            elif 'file' in dct:
+                current = dct['file']
+                content = ""
+                if 'content' in dct:
+                    content = dct['content']
+                self.make_file(dct['file'], content)
+            for key in dct:
+                if key == 'children':
+                    self.pushd(current)
+                    self._make_item(dct['children'])
+                    self.popd()
+                elif key in self.keywords:
+                    self.keywords[key](current, dct[key])
+        else:
+            raise UnknownType("""Don't know what to do with this structure (must
+            have `file` or `directory` as key)""")
+
+    def pushd(self, dirname):
+        dirname = os.path.abspath(dirname)
+        self._curdir.append(os.getcwd())
+        os.chdir(dirname)
+
+    def popd(self):
+        os.chdir(self._curdir.pop())
+
+    def mkdir(self, dirname):
+        os.mkdir(dirname)
+
+    def make_file(self, filename, content):
+        """Create a new file with name ``filename`` and content ``content``.
+        """
+        with open(filename, 'w') as fp:
+            fp.write(content)
+
+    def make_item_mode(self, filename, mode):
+        """Set the mode of the file ``filename`` to ``mode``.
+        """
+        try:
+           os.chmod(filename, mode)
+        except PermissionError:
+            print(f"Unable to set the mode {mode} to {filename}.")
+
+    def make_item_user(self, filename, user):
+        """Set the user of the current file ``filename`` to ``user``.
+         """
+        try:
+            shutil.chown(filename, user=user)
+        except PermissionError:
+            print(f"Unable to set the user {user} to {filename}.")
+
+    def make_item_group(self, filename, group):
+        """Set the group of the current file ``filename`` to ``group``.
+         """
+        try:
+            shutil.chown(filename, group=group)
+        except PermissionError:
+            print(f"Unable to set the group {group} to {filename}.")
+
+
 @contextmanager
 def create_files(filedef, cleanup=True):
     """Contextmanager that creates a directory structure from a yaml
